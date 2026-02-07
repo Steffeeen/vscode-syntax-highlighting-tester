@@ -1,0 +1,163 @@
+[
+  {
+    "startLine": 0,
+    "startChar": 0,
+    "endLine": 0,
+    "endChar": 8,
+    "text": "function",
+    "foreground": "#D4D4D4",
+    "source": "textmate",
+    "scopes": [
+      "source.test",
+      "keyword.control.test"
+    ],
+    "scopeColors": [
+      "#D4D4D4",
+      "#D4D4D4"
+    ],
+    "activeScopeIndex": -1
+  },
+  {
+    "startLine": 0,
+    "startChar": 8,
+    "endLine": 0,
+    "endChar": 9,
+    "text": " ",
+    "foreground": "#D4D4D4",
+    "source": "textmate",
+    "scopes": [
+      "source.test"
+    ],
+    "scopeColors": [
+      "#D4D4D4"
+    ],
+    "activeScopeIndex": -1
+  },
+  {
+    "startLine": 0,
+    "startChar": 9,
+    "endLine": 0,
+    "endChar": 14,
+    "text": "hello",
+    "foreground": "#D4D4D4",
+    "source": "semantic",
+    "scopes": [
+      "function",
+      "(fallback to standard scope: entity.name.function)",
+      "__TM_SCOPES__",
+      "source.test",
+      "identifier.test"
+    ],
+    "scopeColors": [
+      "#D4D4D4",
+      "#D4D4D4",
+      "",
+      "#D4D4D4",
+      "#D4D4D4"
+    ],
+    "activeScopeIndex": 1
+  },
+  {
+    "startLine": 0,
+    "startChar": 14,
+    "endLine": 0,
+    "endChar": 15,
+    "text": " ",
+    "foreground": "#D4D4D4",
+    "source": "textmate",
+    "scopes": [
+      "source.test"
+    ],
+    "scopeColors": [
+      "#D4D4D4"
+    ],
+    "activeScopeIndex": -1
+  },
+  {
+    "startLine": 0,
+    "startChar": 15,
+    "endLine": 0,
+    "endChar": 22,
+    "text": "\"world\"",
+    "foreground": "#D4D4D4",
+    "source": "textmate",
+    "scopes": [
+      "source.test",
+      "string.quoted.double.test"
+    ],
+    "scopeColors": [
+      "#D4D4D4",
+      "#D4D4D4"
+    ],
+    "activeScopeIndex": -1
+  },
+  {
+    "startLine": 1,
+    "startChar": 0,
+    "endLine": 1,
+    "endChar": 3,
+    "text": "var",
+    "foreground": "#D4D4D4",
+    "source": "textmate",
+    "scopes": [
+      "source.test",
+      "keyword.control.test"
+    ],
+    "scopeColors": [
+      "#D4D4D4",
+      "#D4D4D4"
+    ],
+    "activeScopeIndex": -1
+  },
+  {
+    "startLine": 1,
+    "startChar": 3,
+    "endLine": 1,
+    "endChar": 4,
+    "text": " ",
+    "foreground": "#D4D4D4",
+    "source": "textmate",
+    "scopes": [
+      "source.test"
+    ],
+    "scopeColors": [
+      "#D4D4D4"
+    ],
+    "activeScopeIndex": -1
+  },
+  {
+    "startLine": 1,
+    "startChar": 4,
+    "endLine": 1,
+    "endChar": 8,
+    "text": "test",
+    "foreground": "#00FF00",
+    "source": "semantic",
+    "scopes": [
+      "variable",
+      "modifiers: declaration",
+      "__TM_SCOPES__",
+      "source.test",
+      "identifier.test"
+    ],
+    "scopeColors": [
+      "#CCCCCC",
+      "",
+      "",
+      "#D4D4D4",
+      "#D4D4D4"
+    ],
+    "activeScopeIndex": 0
+  },
+  {
+    "startLine": 2,
+    "startChar": 0,
+    "endLine": 2,
+    "endChar": 0,
+    "text": "",
+    "foreground": "",
+    "source": "textmate",
+    "scopes": [],
+    "scopeColors": []
+  }
+]

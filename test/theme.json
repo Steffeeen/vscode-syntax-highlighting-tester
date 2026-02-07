@@ -1,0 +1,10 @@
+{
+    "name": "Test Theme",
+    "tokenColors": [
+        { "scope": "variable", "settings": { "foreground": "#CCCCCC" } }
+    ],
+    "semanticTokenColors": {
+        "variable": "#FF0000",
+        "variable.declaration": "#00FF00"
+    }
+}

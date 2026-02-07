@@ -1,0 +1,18 @@
+{
+    "scopeName": "source.test",
+    "patterns": [
+        {
+            "match": "\\b(function|var)\\b",
+            "name": "keyword.control.test"
+        },
+        {
+            "match": "\\b[a-z]+\\b",
+            "name": "identifier.test"
+        },
+        {
+            "begin": "\"",
+            "end": "\"",
+            "name": "string.quoted.double.test"
+        }
+    ]
+}
