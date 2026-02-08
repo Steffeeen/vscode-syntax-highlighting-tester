@@ -95,3 +95,7 @@ For each input file, the tool generates:
 
 1. `filename.html`: An interactive preview of the highlighting. Hover over tokens to see scope details.
 2. `filename.tokens.json`: A raw JSON dump of the resolved tokens (used for snapshots).
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
