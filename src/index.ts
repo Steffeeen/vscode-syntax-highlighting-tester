@@ -29,7 +29,36 @@ interface Config {
 
 program
     .name('syntax-test')
-    .description('CLI to test syntax highlighting (TextMate + Semantic Tokens)')
+    .description('CLI to test syntax highlighting (TextMate + Semantic Tokens)');
+
+program.command('diff')
+    .description('Generate a visual diff between two token JSON files')
+    .argument('<snapshot>', 'Path to snapshot JSON')
+    .argument('<generated>', 'Path to generated JSON')
+    .argument('[output]', 'Output HTML path')
+    .action((snapshotPath, generatedPath, outputPath) => {
+        const absSnapshotPath = path.resolve(snapshotPath);
+        const absGeneratedPath = path.resolve(generatedPath);
+        
+        if (!fs.existsSync(absSnapshotPath)) {
+            console.error(chalk.red(`Snapshot file not found: ${absSnapshotPath}`));
+            process.exit(1);
+        }
+        if (!fs.existsSync(absGeneratedPath)) {
+            console.error(chalk.red(`Generated file not found: ${absGeneratedPath}`));
+            process.exit(1);
+        }
+
+        const snapshotContent = JSON.parse(fs.readFileSync(absSnapshotPath, 'utf8'));
+        const generatedContent = JSON.parse(fs.readFileSync(absGeneratedPath, 'utf8'));
+        
+        const outPath = outputPath ? path.resolve(outputPath) : path.join(process.cwd(), 'diff.html');
+        
+        Renderer.renderDiffHtml(snapshotContent, generatedContent, outPath, "Snapshot", "Generated");
+        console.log(chalk.green(`Diff generated at: ${outPath}`));
+    });
+
+program
     .argument('<config>', 'Path to configuration JSON file')
     .option('--verify', 'Verify generated tokens against snapshots')
     .option('--update', 'Update snapshots')
@@ -153,11 +182,21 @@ program
                     
                     try {
                         // Normalize by parsing both (handles line ending diffs in JSON file vs memory string)
-                        assert.deepStrictEqual(JSON.parse(actualContent), JSON.parse(expectedContent));
+                        const expectedJson = JSON.parse(expectedContent);
+                        const actualJson = JSON.parse(actualContent);
+                        assert.deepStrictEqual(actualJson, expectedJson);
                         console.log(chalk.green(`  ✅ Snapshot verified`));
                     } catch (e) {
                         console.error(chalk.red(`  ❌ Snapshot mismatch for ${baseName}`));
-                        // Simple diff hint?
+                        // Generate Diff
+                        const diffPath = path.join(outDir, `${baseName}.diff.html`);
+                        try {
+                            const expectedJson = JSON.parse(expectedContent);
+                            Renderer.renderDiffHtml(expectedJson, result, diffPath, "Snapshot", "Generated");
+                            console.error(chalk.yellow(`     Diff report: ${diffPath}`));
+                        } catch (err) {
+                            console.error(chalk.red(`     Failed to generate diff report: ${err}`));
+                        }
                         console.error(chalk.gray(`     (Use --update to overwrite)`));
                         hasError = true;
                     }
