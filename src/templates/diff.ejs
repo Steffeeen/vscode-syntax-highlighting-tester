@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Syntax Highlight Diff</title>
+    <style>
+        body { background-color: #1e1e1e; color: #d4d4d4; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        .pane { width: 50%; padding: 20px; overflow: auto; box-sizing: border-box; }
+        .pane-left { border-right: 1px solid #454545; }
+        h2 { margin-top: 0; font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        pre { white-space: pre; line-height: 1.5; margin: 0; }
+        span { cursor: text; }
+        span[data-scopes]:hover { outline: 1px solid rgba(255,255,255,0.3); }
+        
+        .diff-changed {
+            outline: 1px dashed rgba(255, 200, 0, 0.5);
+            background-color: rgba(255, 200, 0, 0.1);
+        }
+        
+        .diff-line {
+            background-color: rgba(255, 255, 0, 0.04);
+            width: 100%;
+            display: inline-block;
+        }
+
+        #tooltip {
+            box-sizing: border-box;
+            overflow: hidden;
+            position: fixed;
+            display: none;
+            background: #252526;
+            border: 1px solid #454545;
+            color: #cccccc;
+            padding: 0;
+            border-radius: 4px;
+            font-size: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            z-index: 1000;
+            pointer-events: none;
+            max-width: 800px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+        }
+        .tooltip-content {
+            display: flex;
+        }
+        .tooltip-col {
+            padding: 8px 12px;
+            min-width: 250px;
+        }
+        .tooltip-col:first-child {
+            border-right: 1px solid #454545;
+        }
+        .tooltip-header {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #fff;
+            border-bottom: 1px solid #444;
+            padding-bottom: 4px;
+        }
+
+        .tooltip-label { color: #888; }
+        .tooltip-val { color: #4fc1ff; display: flex; flex-flow: wrap column; gap: 2px; }
+        .textmate-scope-gray { color: #888; }
+        .active-scope { color: #4fc1ff; font-weight: bold; }
+        .color-swatch { display: inline-block; width: 10px; height: 10px; border: 1px solid #555; margin-right: 6px; vertical-align: middle; }
+        .scope-row { display: flex; align-items: center; }
+        
+        /* Highlight differences in tooltip */
+        .val-diff { color: #ffaa00 !important; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="pane pane-left" id="pane-left">
+        <h2><%= leftName %></h2>
+        <pre><code><%- leftHtml %></code></pre>
+    </div>
+    <div class="pane pane-right" id="pane-right">
+        <h2><%= rightName %></h2>
+        <pre><code><%- rightHtml %></code></pre>
+    </div>
+    <div id="tooltip"></div>
+
+    <script>
+        const tooltip = document.getElementById('tooltip');
+        const paneLeft = document.getElementById('pane-left');
+        const paneRight = document.getElementById('pane-right');
+        let hideTimeout;
+        
+        // Sync Scrolling
+        let isSyncing = false;
+
+        function syncScroll(source, target) {
+            source.addEventListener('scroll', () => {
+                if (!isSyncing) {
+                    isSyncing = true;
+                    target.scrollTop = source.scrollTop;
+                    target.scrollLeft = source.scrollLeft;
+                    // Reset flag after a short delay
+                    window.requestAnimationFrame(() => isSyncing = false);
+                }
+            });
+        }
+
+        syncScroll(paneLeft, paneRight);
+        syncScroll(paneRight, paneLeft);
+
+        function getTokenData(el) {
+            if (!el || el.tagName !== 'SPAN' || !el.hasAttribute('data-scopes')) return null;
+            return {
+                text: el.getAttribute('data-text'),
+                line: parseInt(el.getAttribute('data-line')),
+                start: parseInt(el.getAttribute('data-start')),
+                end: parseInt(el.getAttribute('data-end')),
+                source: el.getAttribute('data-source'),
+                scopes: el.getAttribute('data-scopes'),
+                foreground: el.getAttribute('data-foreground'),
+                scopeColorsStr: el.getAttribute('data-scope-colors') || '',
+                activeIndex: el.getAttribute('data-active-index') ? parseInt(el.getAttribute('data-active-index'), 10) : -1
+            };
+        }
+
+        function renderTokenInfo(data, otherDataList) {
+            if (!data) return '<div style="color: #888;">No token</div>';
+
+            const scopeList = data.scopes.split(',').map(s => s.trim());
+            const colorList = data.scopeColorsStr.split(','); 
+            
+            // Check for diffs against ANY of the overlapping tokens
+            // Simplified: if there's only one overlapping token, we compare directly.
+            // If multiple, it's hard to strict compare, so we just show data.
+            const other = otherDataList.length === 1 ? otherDataList[0] : null;
+
+            const isFgDiff = other && data.foreground !== other.foreground;
+            const isSourceDiff = other && data.source !== other.source;
+
+            let html = '';
+            
+            // Text Content
+            html += '<div style="margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #444;">';
+            html += '<span class="tooltip-label">Text: </span>';
+            html += '<span style="color: ' + data.foreground + '; font-family: monospace; font-weight: bold; background-color: #1e1e1e; padding: 0 4px; border-radius: 2px;">' + data.text + '</span>';
+            html += '</div>';
+            
+            // Color Info
+            html += '<span class="tooltip-label">Foreground:</span> <span class="tooltip-val ' + (isFgDiff ? 'val-diff' : '') + '" style="display: inline-block; color: #ccc;">';
+            html += '<span class="color-swatch" style="background-color: ' + data.foreground + ';"></span>';
+            html += '<span style="vertical-align: middle;">' + data.foreground + '</span>';
+            html += '</span><br>';
+
+            const renderScope = (scope, color, index, isGray = false) => {
+                let swatch = '';
+                if (color && color !== '') {
+                    swatch = '<span class="color-swatch" style="background-color: ' + color + ';"></span>';
+                }
+                
+                let className = 'scope-row';
+                if (index === data.activeIndex) {
+                    className += ' active-scope';
+                } else if (isGray) {
+                    className += ' textmate-scope-gray';
+                }
+
+                return '<div class="' + className + '">' + swatch + '<span>' + scope + '</span></div>';
+            };
+
+            if (data.source === 'semantic') {
+                const sepIdx = scopeList.indexOf('__TM_SCOPES__');
+                if (sepIdx !== -1) {
+                        const semanticParts = scopeList.slice(0, sepIdx);
+                        const semanticColors = colorList.slice(0, sepIdx);
+                        const tmParts = scopeList.slice(sepIdx + 1);
+                        const tmColors = colorList.slice(sepIdx + 1);
+                        
+                        html += '<span class="tooltip-label">Source:</span> <span class="tooltip-val ' + (isSourceDiff ? 'val-diff' : '') + '">' + data.source + '</span><br>';
+                        html += '<span class="tooltip-label">Semantic Token Type:</span> <div class="tooltip-val">';
+                        semanticParts.forEach((s, i) => html += renderScope(s, semanticColors[i], i, false));
+                        html += '</div><br>';
+                        
+                        html += '<span class="tooltip-label">TextMate Scopes:</span> <div class="tooltip-val">';
+                        for (let i = tmParts.length - 1; i >= 0; i--) {
+                            const originalIndex = sepIdx + 1 + i;
+                            html += renderScope(tmParts[i], tmColors[i], originalIndex, true);
+                        }
+                        html += '</div>';
+                } else {
+                        html += '<span class="tooltip-label">Source:</span> <span class="tooltip-val ' + (isSourceDiff ? 'val-diff' : '') + '">' + data.source + '</span><br>';
+                        html += '<span class="tooltip-label">Scopes:</span> <div class="tooltip-val">';
+                        scopeList.forEach((s, i) => html += renderScope(s, colorList[i], i));
+                        html += '</div>';
+                }
+            } else {
+                    html += '<span class="tooltip-label">Source:</span> <span class="tooltip-val ' + (isSourceDiff ? 'val-diff' : '') + '">' + data.source + '</span><br>';
+                    html += '<span class="tooltip-label">Scopes:</span> <div class="tooltip-val">';
+                    for (let i = scopeList.length - 1; i >= 0; i--) {
+                        html += renderScope(scopeList[i], colorList[i], i, true);
+                    }
+                    html += '</div>';
+            }
+            return html;
+        }
+
+        function showTooltip(e) {
+            const target = e.target;
+            if (target.tagName !== 'SPAN' || !target.hasAttribute('data-scopes')) return;
+
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                hideTimeout = null;
+            }
+
+            const myData = getTokenData(target);
+            if (!myData) return;
+
+            // Find overlapping tokens in the other pane
+            const isLeft = paneLeft.contains(target);
+            const otherPane = isLeft ? paneRight : paneLeft;
+            
+            // Query selector is expensive, optimization: match by line attribute first
+            // Note: data-line is 0-based index
+            const candidates = Array.from(otherPane.querySelectorAll('span[data-line="' + myData.line + '"]'));
+            
+            const overlaps = candidates.filter(el => {
+                const s = parseInt(el.getAttribute('data-start'));
+                const e = parseInt(el.getAttribute('data-end'));
+                // Overlap logic: StartA < EndB && StartB < EndA
+                return myData.start < e && s < myData.end;
+            });
+            
+            const otherDataList = overlaps.map(getTokenData).filter(d => d);
+
+            let html = '<div class="tooltip-content">';
+            
+            // Left Column
+            html += '<div class="tooltip-col">';
+            html += '<div class="tooltip-header"><%= leftName %></div>';
+            if (isLeft) {
+                html += renderTokenInfo(myData, otherDataList);
+            } else {
+                 // We are hovering right, so show others (which are from left) here
+                 otherDataList.forEach((d, i) => {
+                     if (i > 0) html += '<hr style="border: 0; border-top: 1px dashed #444; margin: 8px 0;">';
+                     html += renderTokenInfo(d, [myData]);
+                 });
+                 if (otherDataList.length === 0) html += '<div style="color: #888;">No corresponding token</div>';
+            }
+            html += '</div>';
+
+            // Right Column
+            html += '<div class="tooltip-col">';
+            html += '<div class="tooltip-header"><%= rightName %></div>';
+            if (!isLeft) {
+                html += renderTokenInfo(myData, otherDataList);
+            } else {
+                 // We are hovering left, so show others (which are from right) here
+                 otherDataList.forEach((d, i) => {
+                     if (i > 0) html += '<hr style="border: 0; border-top: 1px dashed #444; margin: 8px 0;">';
+                     html += renderTokenInfo(d, [myData]);
+                 });
+                 if (otherDataList.length === 0) html += '<div style="color: #888;">No corresponding token</div>';
+            }
+            html += '</div>';
+            
+            html += '</div>'; // End content
+
+            const prevRect = tooltip.getBoundingClientRect();
+            const wasVisible = tooltip.style.display === 'block';
+
+            tooltip.innerHTML = html;
+            tooltip.style.display = 'block';
+            updatePosition(e);
+            
+            if (wasVisible) {
+                const newRect = tooltip.getBoundingClientRect();
+                tooltip.animate([
+                    { width: prevRect.width + 'px', height: prevRect.height + 'px' },
+                    { width: newRect.width + 'px', height: newRect.height + 'px' }
+                ], {
+                    duration: 100,
+                    easing: 'ease-out'
+                });
+            }
+        }
+
+        document.querySelectorAll('pre').forEach(el => {
+            el.addEventListener('mouseover', showTooltip);
+            el.addEventListener('mousemove', (e) => {
+                 if (tooltip.style.display === 'block') updatePosition(e);
+            });
+            el.addEventListener('mouseout', (e) => {
+                if (e.target.tagName === 'SPAN' && e.target.hasAttribute('data-scopes')) {
+                    hideTimeout = setTimeout(() => {
+                        tooltip.style.display = 'none';
+                    }, 50);
+                }
+            });
+        });
+
+        function updatePosition(e) {
+            const offset = 15;
+            const width = tooltip.offsetWidth;
+            const height = tooltip.offsetHeight;
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+
+            let left = e.clientX + offset;
+            let top = e.clientY + offset;
+
+            // Horizontal Flip: If it overflows right, place it to the left of cursor
+            if (left + width > winW) {
+                left = e.clientX - offset - width;
+            }
+            
+            // Vertical Flip: If it overflows bottom, place it above cursor
+            if (top + height > winH) {
+                top = e.clientY - offset - height;
+            }
+
+            // Simple bounds check to prevent top/left disappearing off-screen
+            if (left < 0) left = 0;
+            if (top < 0) top = 0;
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            
+            // Ensure we don't have conflicting styles from previous logic
+            tooltip.style.right = 'auto';
+            tooltip.style.bottom = 'auto';
+        }
+    </script>
+</body>
+</html>
