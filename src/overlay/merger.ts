@@ -40,29 +40,43 @@ interface ResolvedStyle {
 
 // Default mapping from Standard LSP Token Types to TextMate scopes
 // Used when the theme doesn't explicit semanticTokenColors
-const STANDARD_TOKEN_MAP: Record<string, string> = {
-    'namespace': 'entity.name.namespace',
-    'type': 'entity.name.type',
-    'class': 'entity.name.class',
-    'enum': 'entity.name.type.enum',
-    'interface': 'entity.name.type.interface',
-    'struct': 'entity.name.type.struct',
-    'typeParameter': 'entity.name.type.parameter',
-    'parameter': 'variable.parameter',
-    'variable': 'variable',
-    'property': 'variable.other.property',
-    'enumMember': 'variable.other.enummember',
-    'event': 'variable.other.event',
-    'function': 'entity.name.function',
-    'method': 'entity.name.function.member',
-    'macro': 'entity.name.function.macro',
-    'keyword': 'keyword',
-    'modifier': 'storage.modifier',
-    'comment': 'comment',
-    'string': 'string',
-    'number': 'constant.numeric',
-    'regexp': 'string.regexp',
-    'operator': 'keyword.operator'
+// https://github.com/microsoft/vscode/blob/1aa235610cf3a1cea299d2c8a5f1bc80f33027c1/src/vs/platform/theme/common/tokenClassificationRegistry.ts#L545
+const STANDARD_TOKEN_MAP: Record<string, string[]> = {
+    "comment": ["comment"],
+    "string": ["string"],
+    "keyword": ["keyword.control"],
+    "number": ["constant.numeric"],
+    "regexp": ["constant.regexp"],
+    "operator": ["keyword.operator"],
+    "namespace": ["entity.name.namespace"],
+    "type": ["entity.name.type", "support.type"],
+    "type.defaultLibrary": ["support.type"],
+    "struct": ["entity.name.type.struct"],
+    "class": ["entity.name.type.class", "support.class"],
+    "class.defaultLibrary": ["support.class"],
+    "interface": ["entity.name.type.interface"],
+    "enum": ["entity.name.type.enum"],
+    "typeParameter": ["entity.name.type.parameter"],
+    "function": ["entity.name.function", "support.function"],
+    "function.defaultLibrary": ["support.function"],
+    "member.defaultLibrary": ["support.function"],
+    "method": ["entity.name.function.member", "support.function"],
+    "macro": ["entity.name.function.preprocessor"],
+    "variable": ["variable.other.readwrite", "entity.name.variable"],
+    "variable.readonly": ["variable.other.constant"],
+    "variable.defaultLibrary.readonly": ["support.constant"],
+    "parameter": ["variable.parameter"],
+    "property": ["variable.other.property"],
+    "property.readonly": ["variable.other.constant.property"],
+    "property.defaultLibrary.readonly": ["support.constant.property"],
+    "enumMember": ["variable.other.enummember"],
+    "event": ["variable.other.event"],
+    "decorator": ["entity.name.decorator", "entity.name.function"],
+
+    // FIXME: these cases are not present in the vscode source code but when using the
+    // SourceKit LSP vscode shows modifier semantic tokens (for example `@Lazy`) as
+    // getting their color from `keyword.control`
+    "modifier": ["keyword.control"], 
 };
 
 export class TokenMerger {
@@ -71,32 +85,11 @@ export class TokenMerger {
         private theme: ThemeResolver
     ) {}
 
-    private getStandardFallbackScope(type: string, modifiers: string[]): string | undefined {
-        // 1. Handle specific modifier combinations
-        if (modifiers.includes('defaultLibrary')) {
-             switch (type) {
-                 case 'class': return 'support.class';
-                 case 'struct': return 'support.type';
-                 case 'interface': return 'support.type';
-                 case 'type': return 'support.type';
-                 case 'enum': return 'support.type';
-                 case 'function': return 'support.function';
-                 case 'method': return 'support.function';
-                 case 'macro': return 'support.function';
-                 case 'variable': return 'support.variable';
-                 case 'property': return 'support.variable.property';
-                 case 'namespace': return 'support.other.namespace';
-             }
-        }
-        
-        if (modifiers.includes('readonly')) {
-            if (type === 'variable' || type === 'property') {
-                return 'variable.other.constant';
-            }
-        }
-        
-        // 2. Fallback to type only
-        return STANDARD_TOKEN_MAP[type];
+    private getStandardFallbackScope(type: string, modifiers: string[]): string[] | undefined {
+        const defaultLibPart = modifiers.includes('defaultLibrary') ? '.defaultLibrary' : '';
+        const readOnlyPart = modifiers.includes('readonly') ? '.readonly' : '';
+        const key = type + defaultLibPart + readOnlyPart;
+        return STANDARD_TOKEN_MAP[key] || STANDARD_TOKEN_MAP[type + readOnlyPart] || STANDARD_TOKEN_MAP[type + defaultLibPart] || STANDARD_TOKEN_MAP[type];
     }
 
     merge(content: string, tmTokens: TmToken[], semanticTokens: SemanticTokens | null, legend?: SemanticTokensLegend | null): StyledRange[] {
@@ -356,15 +349,16 @@ export class TokenMerger {
         const explicitColor = this.theme.resolveSemantic(semantic.type, semantic.modifiers);
         
         // 2. Try Standard Fallback
-        let fallbackScope: string | undefined;
+        let fallbackScopes: string[] | undefined;
         let standardColor: ThemeColor | null = null;
         
         if (!explicitColor) {
-            fallbackScope = this.getStandardFallbackScope(semantic.type, semantic.modifiers);
-            if (fallbackScope) {
+            fallbackScopes = this.getStandardFallbackScope(semantic.type, semantic.modifiers);
+            if (fallbackScopes) {
                 // We treat this fallback resolution like a "TextMate" resolution 
                 // because it matches a scope.
-                const fallbackMatch = this.theme.resolve([fallbackScope]);
+                
+                const fallbackMatch = this.theme.resolve(fallbackScopes);
                 standardColor = fallbackMatch.color;
             }
         }
@@ -373,13 +367,13 @@ export class TokenMerger {
         if (explicitColor) {
             finalColor = explicitColor;
             activeIndex = 0; // Semantic type is always at 0
-            if (fallbackScope) {
-                 finalScopes.push(`(fallback to standard scope: ${fallbackScope})`);
+            if (fallbackScopes) {
+                 finalScopes.push(`(fallback to standard scope: ${fallbackScopes.join(', ')})`);
             }
         } else if (standardColor) {
              finalColor = standardColor;
-             if (fallbackScope) {
-                 finalScopes.push(`(fallback to standard scope: ${fallbackScope})`);
+             if (fallbackScopes) {
+                 finalScopes.push(`(fallback to standard scope: ${fallbackScopes.join(', ')})`);
                  // The fallback scope hint is just added
                  activeIndex = finalScopes.length - 1;
              }
