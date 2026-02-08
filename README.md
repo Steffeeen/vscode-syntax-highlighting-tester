@@ -92,6 +92,13 @@ bun run src/index.ts diff <snapshot.json> <generated.json> [output.html]
 
 This generates an interactive side-by-side view where you can verify discrepancies in color, style, or scopes.
 
+### Example workflow for testing changes to a grammar or language server:
+
+1. Set up a config pointing to your grammar, LSP, and test files.
+2. Run the tool with `--update` to generate a baseline snapshot.
+3. Make changes to your grammar or language server.
+4. Run the tool with `--verify` to get a report of any differences from the baseline.
+
 ## Output
 
 For each input file, the tool generates:
