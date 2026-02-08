@@ -43,7 +43,7 @@ export class Renderer {
         body { background-color: #1e1e1e; color: #d4d4d4; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; margin: 20px; }
         pre { white-space: pre; line-height: 1.5; }
         span { cursor: text; }
-        span:hover { outline: 1px solid rgba(255,255,255,0.3); }
+        span[data-scopes]:hover { outline: 1px solid rgba(255,255,255,0.3); }
         
         #tooltip {
             position: fixed;
@@ -191,7 +191,7 @@ export class Renderer {
         });
 
         codeBlock.addEventListener('mouseout', (e) => {
-            if (e.target.tagName === 'SPAN') {
+            if (e.target.tagName === 'SPAN' && e.target.hasAttribute('data-scopes')) {
                 tooltip.style.display = 'none';
             }
         });
@@ -342,7 +342,7 @@ export class Renderer {
         h2 { margin-top: 0; font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
         pre { white-space: pre; line-height: 1.5; margin: 0; }
         span { cursor: text; }
-        span:hover { outline: 1px solid rgba(255,255,255,0.3); }
+        span[data-scopes]:hover { outline: 1px solid rgba(255,255,255,0.3); }
         
         .diff-changed {
             outline: 1px dashed rgba(255, 200, 0, 0.5);
@@ -619,7 +619,7 @@ export class Renderer {
                  if (tooltip.style.display === 'block') updatePosition(e);
             });
             el.addEventListener('mouseout', (e) => {
-                if (e.target.tagName === 'SPAN') {
+                if (e.target.tagName === 'SPAN' && e.target.hasAttribute('data-scopes')) {
                     hideTimeout = setTimeout(() => {
                         tooltip.style.display = 'none';
                     }, 50);
