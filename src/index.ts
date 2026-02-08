@@ -11,7 +11,6 @@ import { TokenMerger } from './overlay/merger.js';
 import { Renderer } from './renderer.js';
 
 import assert from 'node:assert';
-import { log } from 'node:console';
 
 interface Config {
     grammar: string;
@@ -28,7 +27,6 @@ interface Config {
 }
 
 program
-    .name('syntax-test')
     .description('CLI to test syntax highlighting (TextMate + Semantic Tokens)');
 
 program.command('diff')
