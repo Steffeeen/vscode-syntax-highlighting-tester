@@ -43,7 +43,7 @@ The configuration file controls which grammar, LSP, and files are tested. Paths 
     "command": ["/path/to/language-server", "--arg1", "--arg2"],
     "rootUri": "file:///path/to/project"
   },
-  "theme": "./path/to/theme.json", 
+  "theme": "Dark Modern", 
   "files": ["./path/to/source1", "./path/to/source2"],
   "outDir": "./results",
   "snapshotDir": "./snapshots"
@@ -54,7 +54,7 @@ The configuration file controls which grammar, LSP, and files are tested. Paths 
 |----------|------|----------|-------------|---------|
 | `grammar` | `string` | **Yes** | Path to the main TextMate grammar file (JSON format). | - |
 | `scopeName` | `string` | **Yes** | The root scope name of the grammar (e.g., `source.ts`, `source.swift`). | - |
-| `theme` | `string` | **Yes** | Path to a VS Code compatible JSON theme file. Supports `include` inheritance. | - |
+| `theme` | `string` | **Yes** | Path to a VS Code compatible JSON theme file OR a known theme name (e.g. "Dark Modern", "Dark+", "Light Modern"). | - |
 | `files` | `string[]` | **Yes** | List of source files to process and highlight. | - |
 | `lsp.command` | `string[]` | **Yes** | The command to launch the Language Server (e.g., `["node", "server.js"]` or `["/path/to/binary"]`). | - |
 | `lsp.rootUri` | `string` | No | The root URI sent to the LSP `initialize` request. | `file://` + directory of `config.json` |

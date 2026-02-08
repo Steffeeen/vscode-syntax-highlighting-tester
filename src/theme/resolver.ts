@@ -3,6 +3,8 @@ import path from 'node:path';
 import JSON5 from 'json5';
 import chalk from 'chalk';
 
+import { findVsCodeThemeDir } from '../utils/vscode.js';
+
 export interface ThemeColor {
     foreground?: string;
     fontStyle?: string; // italic, bold, underline
@@ -13,7 +15,7 @@ interface ThemeRule {
     settings: ThemeColor;
 }
 
-    interface VSCodeTheme {
+interface VSCodeTheme {
     name?: string;
     include?: string;
     type?: string; // dark | light
@@ -37,13 +39,50 @@ export class ThemeResolver {
 
     private loadTheme(themePath: string) {
         try {
-            const content = fs.readFileSync(themePath, 'utf8');
+            let finalPath = themePath;
+
+            // Map common names to filenames in VS Code defaults
+            const nameMap: Record<string, string> = {
+                "Dark Modern": "dark_modern.json",
+                "Default Dark Modern": "dark_modern.json",
+                "Dark+": "dark_plus.json",
+                "Default Dark+": "dark_plus.json",
+                "Dark (Visual Studio)": "dark_vs.json",
+                "Light Modern": "light_modern.json",
+                "Default Light Modern": "light_modern.json",
+                "Light+": "light_plus.json",
+                "Default Light+": "light_plus.json",
+                "Light (Visual Studio)": "light_vs.json"
+            };
+
+            if (nameMap[themePath]) {
+                 const vsCodeDir = findVsCodeThemeDir();
+                 if (!vsCodeDir) {
+                     throw new Error(`Could not find VS Code installation to load default theme "${themePath}".\nPlease install VS Code or set the VSCODE_PATH environment variable.`);
+                 }
+                 finalPath = path.join(vsCodeDir, nameMap[themePath]);
+            } else if (!fs.existsSync(themePath) && !path.isAbsolute(themePath)) {
+                 // Try looking in defaults just in case user passed "dark_modern" without extension
+                 // We check VS Code dir here too
+                 const vsCodeDir = findVsCodeThemeDir();
+                 if (vsCodeDir) {
+                    const potentialPath = path.join(vsCodeDir, themePath + '.json');
+                    if (fs.existsSync(potentialPath)) {
+                        finalPath = potentialPath;
+                    }
+                 }
+            }
+
+            console.log(chalk.blue(`Loading theme from: ${finalPath}`));
+
+            const content = fs.readFileSync(finalPath, 'utf8');
             const theme = JSON5.parse(content) as VSCodeTheme;
             
             // Handle inheritance (include property)
             // Load base theme first so that current theme can override
             if (theme.include) {
-                const baseThemePath = path.resolve(path.dirname(themePath), theme.include);
+                // Resolve include relative to the current theme file location (finalPath)
+                const baseThemePath = path.resolve(path.dirname(finalPath), theme.include);
                 // Simple cycle detection could be added here if needed, but keeping it simple for now
                 this.loadTheme(baseThemePath);
             }

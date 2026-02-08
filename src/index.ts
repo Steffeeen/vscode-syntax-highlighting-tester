@@ -90,8 +90,13 @@ program
             }
         }
 
-        const themePath = resolve(config.theme);
-        console.log(chalk.blue(`Using theme: ${themePath}`));
+        let themePath = config.theme;
+        // If it looks like a path (ends in .json) or contains path separators, try to resolve it.
+        // Otherwise, pass it as-is to the resolver (which handles default theme names).
+        if (themePath.endsWith('.json') || themePath.includes('/') || themePath.includes('\\')) {
+             themePath = resolve(config.theme);
+        }
+
         const outDir = config.outDir ? resolve(config.outDir) : path.join(configBaseDir, 'out');
         const snapshotDir = config.snapshotDir ? resolve(config.snapshotDir) : path.join(configBaseDir, 'snapshots');
 
