@@ -2,7 +2,7 @@
 
 <sup>Built mostly by Gemini 3 Pro using [opencode](https://opencode.ai).</sup>
 
-A CLI tool to validate VSCode syntax highlighting by combining TextMate grammars and LSP Semantic Tokens, ensuring your editor themes and grammars work as expected.
+A CLI tool to make debugging VSCode syntax highlighting easier by simulating the full TextMate + Semantic Token pipeline, generating visual previews, and providing snapshot-based regression testing with diffing capabilities.
 
 ## Features
 
