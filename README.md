@@ -9,9 +9,12 @@ A CLI tool to validate VSCode syntax highlighting by combining TextMate grammars
 - **Hybrid Engine**: Simulates VS Code's highlighting pipeline by merging TextMate scopes (using `vscode-textmate` + `vscode-oniguruma`) with LSP Semantic Tokens.
 - **Theme Support**: Resolves colors using VS Code compatible JSON themes.
 - **Visualization**: Generates HTML previews with tooltips to inspect the full scope stack and token provenance (TextMate vs Semantic).
+
 ![screenshot showing the tooltip](assets/tooltip.png)
+
 - **Regression Testing**: Snapshot-based testing to verify that changes to the semantic tokens, grammar, or theme do not introduce unexpected differences.
 - **Diffing**: When verifying snapshots, generates a diff of any mismatches to quickly identify issues.
+
 ![screenshot showing the diff view](assets/diff.png)
 
 ## Installation
