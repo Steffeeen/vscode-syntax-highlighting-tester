@@ -17,6 +17,7 @@ export class LspClient {
     private nextId = 1;
     private isClosed = false;
     public legend: SemanticTokensLegend | null = null;
+    public capabilities: any = {};
 
     constructor(private command: string[]) {}
 
@@ -59,6 +60,11 @@ export class LspClient {
                 }
             }
         };
+
+        // Allow overriding capabilities
+        if (this.capabilities.textDocument) {
+             Object.assign(initParams.capabilities.textDocument!, this.capabilities.textDocument);
+        }
 
         const result = await this.sendRequest<InitializeResult>('initialize', initParams);
         

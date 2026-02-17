@@ -483,7 +483,7 @@ export class TokenMerger {
             'namespace', 'type', 'class', 'enum', 'interface', 'struct', 'typeParameter', 
             'parameter', 'variable', 'property', 'enumMember', 'event', 'function', 
             'method', 'macro', 'keyword', 'modifier', 'comment', 'string', 'number', 
-            'regexp', 'operator'
+            'regexp', 'operator', 'decorator'
         ];
         return defaultLegend[idx] || 'unknown';
     }
