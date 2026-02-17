@@ -3,48 +3,7 @@
 <head>
     <title>Syntax Highlight Test - <%= themeName %></title>
     <style>
-        body { background-color: #1e1e1e; color: #d4d4d4; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; margin: 20px; }
-        pre { white-space: pre; line-height: 1.5; }
-        span { cursor: text; }
-        span[data-scopes]:hover { outline: 1px solid rgba(255,255,255,0.3); }
-        
-        #tooltip {
-            position: fixed;
-            display: none;
-            background: #252526;
-            border: 1px solid #454545;
-            color: #cccccc;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-            z-index: 1000;
-            pointer-events: none;
-            max-width: 500px;
-            white-space: pre-wrap;
-            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-        }
-        .tooltip-label { color: #888; }
-        .tooltip-val { 
-            color: #4fc1ff;
-            display: flex;
-            flex-flow: wrap column;
-            gap: 2px;
-        }
-        .textmate-scope-gray { color: #888; }
-        .active-scope { color: #4fc1ff; font-weight: bold; }
-        .color-swatch {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border: 1px solid #555;
-            margin-right: 6px;
-            vertical-align: middle;
-        }
-        .scope-row {
-            display: flex;
-            align-items: center;
-        }
+        <%- include('partials/styles') %>
     </style>
 </head>
 <body>
@@ -80,6 +39,8 @@
         const tooltip = document.getElementById('tooltip');
         const codeBlock = document.querySelector('pre');
 
+        <%- include('partials/scripts-utils') %>
+
         codeBlock.addEventListener('mouseover', (e) => {
             if (e.target.tagName === 'SPAN' && e.target.hasAttribute('data-scopes')) {
                 const source = e.target.getAttribute('data-source');
@@ -100,23 +61,6 @@
                 html += '<span style="vertical-align: middle;">' + foreground + '</span>';
                 html += '</span><br>';
 
-                // Helper to render a scope with its color
-                const renderScope = (scope, color, index, isGray = false) => {
-                    let swatch = '';
-                    if (color && color !== '') {
-                        swatch = '<span class="color-swatch" style="background-color: ' + color + ';"></span>';
-                    }
-                    
-                    let className = 'scope-row';
-                    if (index === activeIndex) {
-                        className += ' active-scope';
-                    } else if (isGray) {
-                        className += ' textmate-scope-gray';
-                    }
-
-                    return '<div class="' + className + '">' + swatch + '<span>' + scope + '</span></div>';
-                };
-
                 if (source === 'semantic') {
                     // Split into semantic and textmate
                     // We look for our special separator
@@ -135,7 +79,7 @@
                          
                          html += '<span class="tooltip-label">Source:</span> <span class="tooltip-val">' + source + '</span><br>';
                          html += '<span class="tooltip-label">Semantic Token Type:</span> <div class="tooltip-val">';
-                         semanticParts.forEach((s, i) => html += renderScope(s, semanticColors[i], i, false));
+                         semanticParts.forEach((s, i) => html += renderScope(s, semanticColors[i], i, activeIndex, false));
                          html += '</div><br>';
                          
                          html += '<span class="tooltip-label">TextMate Scopes:</span> <div class="tooltip-val">';
@@ -143,14 +87,14 @@
                          // We need the original index to match activeIndex
                          for (let i = tmParts.length - 1; i >= 0; i--) {
                              const originalIndex = sepIdx + 1 + i;
-                             html += renderScope(tmParts[i], tmColors[i], originalIndex, true);
+                             html += renderScope(tmParts[i], tmColors[i], originalIndex, activeIndex, true);
                          }
                          html += '</div>';
                     } else {
                          // Fallback
                          html += '<span class="tooltip-label">Source:</span> <span class="tooltip-val">' + source + '</span><br>';
                          html += '<span class="tooltip-label">Scopes:</span> <div class="tooltip-val">';
-                         scopeList.forEach((s, i) => html += renderScope(s, colorList[i], i));
+                         scopeList.forEach((s, i) => html += renderScope(s, colorList[i], i, activeIndex));
                          html += '</div>';
                     }
                 } else {
@@ -159,7 +103,7 @@
                      html += '<span class="tooltip-label">Scopes:</span> <div class="tooltip-val">';
                      for (let i = scopeList.length - 1; i >= 0; i--) {
                          // All are potentially gray except active one
-                         html += renderScope(scopeList[i], colorList[i], i, true);
+                         html += renderScope(scopeList[i], colorList[i], i, activeIndex, true);
                      }
                      html += '</div>';
                 }
@@ -182,38 +126,6 @@
                 tooltip.style.display = 'none';
             }
         });
-
-        function updatePosition(e) {
-            const offset = 15;
-            const width = tooltip.offsetWidth;
-            const height = tooltip.offsetHeight;
-            const winW = window.innerWidth;
-            const winH = window.innerHeight;
-
-            let left = e.clientX + offset;
-            let top = e.clientY + offset;
-
-            // Horizontal Flip: If it overflows right, place it to the left of cursor
-            if (left + width > winW) {
-                left = e.clientX - offset - width;
-            }
-            
-            // Vertical Flip: If it overflows bottom, place it above cursor
-            if (top + height > winH) {
-                top = e.clientY - offset - height;
-            }
-
-            // Simple bounds check to prevent top/left disappearing off-screen
-            if (left < 0) left = 0;
-            if (top < 0) top = 0;
-
-            tooltip.style.left = left + 'px';
-            tooltip.style.top = top + 'px';
-            
-            // Ensure we don't have conflicting styles from previous logic
-            tooltip.style.right = 'auto';
-            tooltip.style.bottom = 'auto';
-        }
     </script>
 </body>
 </html>

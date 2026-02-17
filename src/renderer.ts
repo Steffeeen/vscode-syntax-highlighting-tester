@@ -16,7 +16,7 @@ export class Renderer {
         const templatePath = path.join(__dirname, 'templates', 'normal.ejs');
         const template = fs.readFileSync(templatePath, 'utf-8');
         
-        const html = ejs.render(template, { ranges, themeName });
+        const html = ejs.render(template, { ranges, themeName }, { filename: templatePath });
         fs.writeFileSync(outputPath, html);
     }
 
@@ -119,7 +119,7 @@ export class Renderer {
         const templatePath = path.join(__dirname, 'templates', 'diff.ejs');
         const template = fs.readFileSync(templatePath, 'utf-8');
 
-        const html = ejs.render(template, { leftHtml, rightHtml, leftName, rightName });
+        const html = ejs.render(template, { leftHtml, rightHtml, leftName, rightName }, { filename: templatePath });
         fs.writeFileSync(outputPath, html);
     }
 }

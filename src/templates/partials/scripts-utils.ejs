@@ -1,0 +1,48 @@
+        // Helper to render a scope with its color
+        const renderScope = (scope, color, index, activeIndex, isGray = false) => {
+            let swatch = '';
+            if (color && color !== '') {
+                swatch = '<span class="color-swatch" style="background-color: ' + color + ';"></span>';
+            }
+            
+            let className = 'scope-row';
+            if (index === activeIndex) {
+                className += ' active-scope';
+            } else if (isGray) {
+                className += ' textmate-scope-gray';
+            }
+
+            return '<div class="' + className + '">' + swatch + '<span>' + scope + '</span></div>';
+        };
+
+        function updatePosition(e) {
+            const offset = 15;
+            const width = tooltip.offsetWidth;
+            const height = tooltip.offsetHeight;
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+
+            let left = e.clientX + offset;
+            let top = e.clientY + offset;
+
+            // Horizontal Flip: If it overflows right, place it to the left of cursor
+            if (left + width > winW) {
+                left = e.clientX - offset - width;
+            }
+            
+            // Vertical Flip: If it overflows bottom, place it above cursor
+            if (top + height > winH) {
+                top = e.clientY - offset - height;
+            }
+
+            // Simple bounds check to prevent top/left disappearing off-screen
+            if (left < 0) left = 0;
+            if (top < 0) top = 0;
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            
+            // Ensure we don't have conflicting styles from previous logic
+            tooltip.style.right = 'auto';
+            tooltip.style.bottom = 'auto';
+        }

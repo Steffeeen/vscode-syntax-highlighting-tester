@@ -1,0 +1,42 @@
+        body { background-color: #1e1e1e; color: #d4d4d4; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; margin: 20px; }
+        pre { white-space: pre; line-height: 1.5; }
+        span { cursor: text; }
+        span[data-scopes]:hover { outline: 1px solid rgba(255,255,255,0.3); }
+        
+        #tooltip {
+            position: fixed;
+            display: none;
+            background: #252526;
+            border: 1px solid #454545;
+            color: #cccccc;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            z-index: 1000;
+            pointer-events: none;
+            max-width: 500px;
+            white-space: pre-wrap;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+        }
+        .tooltip-label { color: #888; }
+        .tooltip-val { 
+            color: #4fc1ff;
+            display: flex;
+            flex-flow: wrap column;
+            gap: 2px;
+        }
+        .textmate-scope-gray { color: #888; }
+        .active-scope { color: #4fc1ff; font-weight: bold; }
+        .color-swatch {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border: 1px solid #555;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        .scope-row {
+            display: flex;
+            align-items: center;
+        }
