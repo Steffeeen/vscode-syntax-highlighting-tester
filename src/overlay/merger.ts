@@ -339,6 +339,15 @@ export class TokenMerger {
         let finalColor: ThemeColor | null = null;
         let finalSource: 'textmate' | 'semantic' = 'semantic';
         let activeIndex = -1;
+
+        // FIXME: debug why this hack is needed
+        // Fix for SourceKit-LSP: attributes like @Test are reported as 'macro', 
+        // but VS Code displays them as 'modifier' because they are attributes.
+        // We detect this via TextMate scope context.
+        if (semantic.type === 'macro' && tmScopes.some(s => s.includes('attribute'))) {
+            semantic.type = 'modifier';
+        }
+
         const finalScopes: string[] = [semantic.type];
         
         if (semantic.modifiers.length > 0) {
