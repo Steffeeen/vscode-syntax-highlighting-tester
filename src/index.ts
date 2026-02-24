@@ -60,6 +60,7 @@ program
     .argument('<config>', 'Path to configuration JSON file')
     .option('--verify', 'Verify generated tokens against snapshots')
     .option('--update', 'Update snapshots')
+    .option('--snapshot-name <name>', 'Custom name for the snapshot')
     .action(async (configPath, options) => {
         const absConfigPath = path.resolve(configPath);
         if (!fs.existsSync(absConfigPath)) {
@@ -163,7 +164,11 @@ program
             const baseName = path.basename(filePath);
             const jsonPath = path.join(outDir, `${baseName}.tokens.json`);
             const htmlPath = path.join(outDir, `${baseName}.html`);
-            const snapshotPath = path.join(snapshotDir, `${baseName}.tokens.json`);
+            
+            const snapshotFileName = options.snapshotName 
+                ? `${baseName}.${options.snapshotName}.tokens.json`
+                : `${baseName}.tokens.json`;
+            const snapshotPath = path.join(snapshotDir, snapshotFileName);
 
             Renderer.saveJson(result, jsonPath);
             Renderer.renderHtml(result, htmlPath, config.theme || "Default Dark+");
@@ -192,10 +197,14 @@ program
                     } catch (e) {
                         console.error(chalk.red(`  ❌ Snapshot mismatch for ${baseName}`));
                         // Generate Diff
-                        const diffPath = path.join(outDir, `${baseName}.diff.html`);
+                        const diffFileName = options.snapshotName 
+                            ? `${baseName}.${options.snapshotName}.diff.html`
+                            : `${baseName}.diff.html`;
+                        const diffPath = path.join(outDir, diffFileName);
                         try {
                             const expectedJson = JSON.parse(expectedContent);
-                            Renderer.renderDiffHtml(expectedJson, result, diffPath, "Snapshot", "Generated");
+                            const snapshotLabel = options.snapshotName ? `Snapshot (${options.snapshotName})` : "Snapshot";
+                            Renderer.renderDiffHtml(expectedJson, result, diffPath, snapshotLabel, "Generated");
                             console.error(chalk.yellow(`     Diff report: ${diffPath}`));
                         } catch (err) {
                             console.error(chalk.red(`     Failed to generate diff report: ${err}`));

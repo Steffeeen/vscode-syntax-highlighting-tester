@@ -78,6 +78,21 @@ bun run src/index.ts config.json --update
 
 When running in `--verify` mode, if there are any mismatches between the generated tokens and the snapshot, a visual diff report will be generated for each file, showing side-by-side comparisons of the expected vs actual tokens.
 
+#### Named Snapshots
+
+You can create multiple versions of snapshots for the same file (e.g., to test different configurations or scenarios) using the `--snapshot-name` option.
+
+To create a named snapshot:
+```bash
+bun run src/index.ts config.json --update --snapshot-name v2
+# Creates: snapshots/filename.v2.tokens.json
+```
+
+To verify against a specific named snapshot:
+```bash
+bun run src/index.ts config.json --verify --snapshot-name v2
+```
+
 ### Visual Diff Tool
 
 You can manually generate a visual diff HTML report between any two token JSON files (e.g., a snapshot and a newly generated output) using the `diff` command.
