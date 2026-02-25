@@ -61,6 +61,7 @@ program
     .option('--verify', 'Verify generated tokens against snapshots')
     .option('--update', 'Update snapshots')
     .option('--snapshot-name <name>', 'Custom name for the snapshot')
+    .option('--generated-name <name>', 'Custom name for the generated output in diff', 'Generated')
     .action(async (configPath, options) => {
         const absConfigPath = path.resolve(configPath);
         if (!fs.existsSync(absConfigPath)) {
@@ -204,7 +205,8 @@ program
                         try {
                             const expectedJson = JSON.parse(expectedContent);
                             const snapshotLabel = options.snapshotName ? `Snapshot (${options.snapshotName})` : "Snapshot";
-                            Renderer.renderDiffHtml(expectedJson, result, diffPath, snapshotLabel, "Generated");
+                            const generatedLabel = options.generatedName;
+                            Renderer.renderDiffHtml(expectedJson, result, diffPath, snapshotLabel, generatedLabel);
                             console.error(chalk.yellow(`     Diff report: ${diffPath}`));
                         } catch (err) {
                             console.error(chalk.red(`     Failed to generate diff report: ${err}`));

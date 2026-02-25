@@ -93,6 +93,14 @@ To verify against a specific named snapshot:
 bun run src/index.ts config.json --verify --snapshot-name v2
 ```
 
+#### Custom Diff Labels
+
+You can also customize the label for the "generated" side of the diff using `--generated-name`:
+
+```bash
+bun run src/index.ts config.json --verify --generated-name "Proposed Changes"
+```
+
 ### Visual Diff Tool
 
 You can manually generate a visual diff HTML report between any two token JSON files (e.g., a snapshot and a newly generated output) using the `diff` command.
